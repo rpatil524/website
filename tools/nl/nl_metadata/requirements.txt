@@ -1,0 +1,7 @@
+datacommons-client
+google
+google.cloud
+google.genai
+pandas
+pydantic
+python-dotenv
