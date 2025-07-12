@@ -18,10 +18,19 @@
  * Main app component for map explorer.
  */
 
-import React, { useEffect, useState } from "react";
+import { ThemeProvider } from "@emotion/react";
+import React, { ReactElement, useEffect, useState } from "react";
 import { Container, Row } from "reactstrap";
 
 import { ASYNC_ELEMENT_HOLDER_CLASS } from "../../constants/css_constants";
+import { intl } from "../../i18n/i18n";
+import { visualizationToolMessages } from "../../i18n/i18n_vis_tool_messages";
+import {
+  isFeatureEnabled,
+  STANDARDIZED_VIS_TOOL_FEATURE_FLAG,
+} from "../../shared/feature_flags/util";
+import theme from "../../theme/theme";
+import { ToolHeader } from "../shared/tool_header";
 import { ChartLoader } from "./chart_loader";
 import { Context, ContextType, useInitialContext } from "./context";
 import { Info } from "./info";
@@ -40,9 +49,12 @@ import {
   updateHashStatVar,
 } from "./util";
 
-function App(): JSX.Element {
+function App(): ReactElement {
   const [isSvModalOpen, updateSvModalOpen] = useState(false);
   const toggleSvModalCallback = (): void => updateSvModalOpen(!isSvModalOpen);
+  const useStandardizedUi = isFeatureEnabled(
+    STANDARDIZED_VIS_TOOL_FEATURE_FLAG
+  );
 
   return (
     <React.StrictMode>
@@ -53,7 +65,19 @@ function App(): JSX.Element {
       <div id="plot-container" className={ASYNC_ELEMENT_HOLDER_CLASS}>
         <Container fluid={true}>
           <Row>
-            <Title />
+            {useStandardizedUi ? (
+              <ToolHeader
+                title={intl.formatMessage(
+                  visualizationToolMessages.mapToolTitle
+                )}
+                subtitle={intl.formatMessage(
+                  visualizationToolMessages.mapToolSubtitle
+                )}
+                switchToolsUrl="/tools/visualization#visType%3Dmap"
+              />
+            ) : (
+              <Title />
+            )}
           </Row>
           <Row>
             <PlaceOptions toggleSvHierarchyModal={toggleSvModalCallback} />
@@ -70,7 +94,7 @@ function App(): JSX.Element {
   );
 }
 
-export function AppWithContext(): JSX.Element {
+export function AppWithContext(): ReactElement {
   const params = new URLSearchParams(
     decodeURIComponent(location.hash).replace("#", "?")
   );
@@ -80,9 +104,11 @@ export function AppWithContext(): JSX.Element {
   window.onhashchange = (): void => applyHash(store);
 
   return (
-    <Context.Provider value={store}>
-      <App />
-    </Context.Provider>
+    <ThemeProvider theme={theme}>
+      <Context.Provider value={store}>
+        <App />
+      </Context.Provider>
+    </ThemeProvider>
   );
 }
 
